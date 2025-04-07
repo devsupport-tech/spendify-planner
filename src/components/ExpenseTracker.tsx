@@ -100,7 +100,7 @@ export function ExpenseTracker() {
     setNewExpense({
       amount: 0,
       description: "",
-      date: new Date(),
+      date: format(new Date(), 'yyyy-MM-dd'), // Fix: convert Date to string
       isPaid: false,
       isRecurring: false,
       category: "Other",

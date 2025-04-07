@@ -99,7 +99,7 @@ export function PaymentTracker() {
     setNewPayment({
       amount: 0,
       description: "",
-      date: new Date(),
+      date: format(new Date(), 'yyyy-MM-dd'),
       isReceived: false,
       isRecurring: false,
       category: "Other",
