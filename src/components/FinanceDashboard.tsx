@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { addMonths, format, startOfMonth, endOfMonth, isWithinInterval, subMonth
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
 
@@ -31,7 +32,6 @@ export function FinanceDashboard({ onCardClick }) {
   const [timeRange, setTimeRange] = useState<'1m' | '3m' | '6m' | '1y'>('1m');
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const { toast } = useToast();
   
   const [expenseForm, setExpenseForm] = useState({
     description: '',
@@ -347,14 +347,14 @@ export function FinanceDashboard({ onCardClick }) {
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <ArrowUpRight className="h-4 w-4" />
-                <span>New Payment</span>
+                <span>New Income</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Payment</DialogTitle>
+                <DialogTitle>Add New Income</DialogTitle>
                 <DialogDescription>
-                  Enter the details of your incoming payment below.
+                  Enter the details of your income below.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handlePaymentSubmit}>
@@ -382,7 +382,7 @@ export function FinanceDashboard({ onCardClick }) {
                       value={paymentForm.amount}
                       onChange={handlePaymentChange}
                       className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      placeholder="1000.00"
+                      placeholder="100.00"
                       required
                     />
                   </div>
@@ -399,7 +399,6 @@ export function FinanceDashboard({ onCardClick }) {
                       <option value="Freelance">Freelance</option>
                       <option value="Investment">Investment</option>
                       <option value="Gift">Gift</option>
-                      <option value="Refund">Refund</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
@@ -429,302 +428,263 @@ export function FinanceDashboard({ onCardClick }) {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit">Add Payment</Button>
+                  <Button type="submit">Add Income</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
-
-          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '1m' | '3m' | '6m' | '1y')}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select time range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1m">Last Month</SelectItem>
-              <SelectItem value="3m">Last 3 Months</SelectItem>
-              <SelectItem value="6m">Last 6 Months</SelectItem>
-              <SelectItem value="1y">Last Year</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card onClick={() => onCardClick('Total Income')}>
+        <Card className="finance-dashboard-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Income
-            </CardTitle>
-            <BanknoteIcon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+            <ArrowDownRight className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalExpenses)}</div>
+            <p className="text-xs text-muted-foreground">
+              From {filteredExpenses.length} transactions
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="finance-dashboard-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+            <ArrowUpRight className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalIncome)}</div>
+            <p className="text-xs text-muted-foreground">
+              From {filteredPayments.length} payments
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="finance-dashboard-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Balance</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
             <div className="flex items-center text-xs">
-              <span className="text-muted-foreground">
-                {filteredPayments.length} transactions
+              <span className={`flex items-center ${balance >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {balance >= 0 ? <ArrowUpRight className="mr-1 h-3 w-3" /> : <ArrowDownRight className="mr-1 h-3 w-3" />}
+                {Math.abs(balance / (totalIncome || 1) * 100).toFixed(1)}%
+              </span>
+              <span className="ml-1 text-muted-foreground">
+                {balance >= 0 ? 'savings' : 'deficit'} rate
               </span>
             </div>
           </CardContent>
         </Card>
-        
-        <Card onClick={() => onCardClick('Total Expenses')}>
+        <Card className="finance-dashboard-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Expenses
-            </CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
-            <div className="flex items-center text-xs">
-              <span className="text-muted-foreground">
-                {filteredExpenses.length} transactions
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card onClick={() => onCardClick('Net Balance')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Net Balance
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={cn("text-2xl font-bold", balance >= 0 ? "text-emerald-600" : "text-red-600")}>
-              {formatCurrency(balance)}
-            </div>
-            <div className="flex items-center text-xs">
-              <ArrowUpRight className="mr-1 h-3 w-3 text-emerald-500" />
-              <span className="text-muted-foreground">
-                {balance >= 0 ? 'Positive cash flow' : 'Negative cash flow'}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card onClick={() => onCardClick('Upcoming Due')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Upcoming Due
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCurrency(upcomingExpenses.reduce((sum, expense) => sum + expense.amount, 0))}
             </div>
-            <div className="flex items-center text-xs">
-              <span className="text-muted-foreground">
-                {upcomingExpenses.length} upcoming expenses
-              </span>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              {upcomingExpenses.length} due in next 30 days
+            </p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4" onClick={() => onCardClick('Income vs Expenses')}>
+        <Card className="md:col-span-4 finance-dashboard-card">
           <CardHeader>
-            <CardTitle>Income vs Expenses</CardTitle>
-            <CardDescription>
-              Financial overview for {format(startDate, 'MMM yyyy')} to {format(endDate, 'MMM yyyy')}
-            </CardDescription>
+            <CardTitle>Overview</CardTitle>
+            <CardDescription>Income vs expenses {timeRange === '1m' ? 'this month' : `for the last ${timeRange}`}</CardDescription>
+            <div className="flex items-center gap-2">
+              <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
+                <SelectTrigger className="h-8 w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1m">Last Month</SelectItem>
+                  <SelectItem value="3m">Last 3 Months</SelectItem>
+                  <SelectItem value="6m">Last 6 Months</SelectItem>
+                  <SelectItem value="1y">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
-          <CardContent className="px-2">
-            <div className="h-[300px]">
+          <CardContent>
+            <div className="h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={monthlyData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
+                <BarChart data={monthlyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                   <XAxis dataKey="month" />
                   <YAxis tickFormatter={(value) => `$${value}`} />
                   <Tooltip 
-                    formatter={(value) => formatCurrency(value as number)}
-                    labelFormatter={(label) => `Month: ${label}`}
+                    formatter={(value) => [`$${value}`, '']}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                      border: 'none',
+                    }}
                   />
-                  <Bar dataKey="income" fill="#10B981" name="Income" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expenses" fill="#F43F5E" name="Expenses" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="income" name="Income" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" name="Expenses" fill="#F43F5E" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="profit" name="Profit" fill="#6366F1" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="lg:col-span-3" onClick={() => onCardClick('Personal vs Business')}>
+        <Card className="md:col-span-3 finance-dashboard-card">
           <CardHeader>
-            <CardTitle>Personal vs Business</CardTitle>
-            <CardDescription>
-              Breakdown by finance type
-            </CardDescription>
+            <CardTitle>Expense Categories</CardTitle>
+            <CardDescription>Top spending categories</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] flex justify-center items-center">
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <h3 className="font-medium text-muted-foreground">Income</h3>
-                    <div className="text-2xl font-bold mt-1">{formatCurrency(totalIncome)}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <span className="text-sm">Personal</span>
-                      </div>
-                      <span className="font-medium">{formatCurrency(personalIncome)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                        <span className="text-sm">Business</span>
-                      </div>
-                      <span className="font-medium">{formatCurrency(businessIncome)}</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full mt-1">
-                      <div 
-                        className="h-2 bg-blue-500 rounded-full" 
-                        style={{ 
-                          width: `${(personalIncome / (totalIncome || 1)) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <h3 className="font-medium text-muted-foreground">Expenses</h3>
-                    <div className="text-2xl font-bold mt-1">{formatCurrency(totalExpenses)}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <span className="text-sm">Personal</span>
-                      </div>
-                      <span className="font-medium">{formatCurrency(personalExpenses)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                        <span className="text-sm">Business</span>
-                      </div>
-                      <span className="font-medium">{formatCurrency(businessExpenses)}</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full mt-1">
-                      <div 
-                        className="h-2 bg-blue-500 rounded-full" 
-                        style={{ 
-                          width: `${(personalExpenses / (totalExpenses || 1)) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="h-[250px] flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expenseCategoryData()}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    innerRadius={60}
+                    paddingAngle={2}
+                    label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {expenseCategoryData().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`$${value}`, '']} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
-      
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card onClick={() => onCardClick('Top Expense Categories')}>
-          <CardHeader>
-            <CardTitle>Top Expense Categories</CardTitle>
-            <CardDescription>Where your money is going</CardDescription>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="finance-dashboard-card">
+          <CardHeader className="flex items-center justify-between">
+            <div>
+              <CardTitle>Personal vs Business</CardTitle>
+              <CardDescription>Expense comparison</CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {expenseCategoryData().map((category, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                    ></div>
-                    <span className="text-sm font-medium">{category.name}</span>
-                  </div>
-                  <span>{formatCurrency(category.value)}</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                  <p className="text-sm font-medium">Personal</p>
                 </div>
-              ))}
+                <p className="text-2xl font-bold">{formatCurrency(personalExpenses)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {Math.round((personalExpenses / totalExpenses) * 100)}% of total
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-purple-500"></div>
+                  <p className="text-sm font-medium">Business</p>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(businessExpenses)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {Math.round((businessExpenses / totalExpenses) * 100)}% of total
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div className="flex items-center justify-between space-y-1">
+                <p className="text-sm font-medium">Personal</p>
+                <p className="text-sm font-medium">{Math.round((personalExpenses / totalExpenses) * 100)}%</p>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted">
+                <div
+                  className="h-2 rounded-full bg-blue-500"
+                  style={{ width: `${(personalExpenses / totalExpenses) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="mt-2">
+              <div className="flex items-center justify-between space-y-1">
+                <p className="text-sm font-medium">Business</p>
+                <p className="text-sm font-medium">{Math.round((businessExpenses / totalExpenses) * 100)}%</p>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted">
+                <div
+                  className="h-2 rounded-full bg-purple-500"
+                  style={{ width: `${(businessExpenses / totalExpenses) * 100}%` }}
+                ></div>
+              </div>
             </div>
           </CardContent>
         </Card>
-        
-        <Card onClick={() => onCardClick('Top Income Sources')}>
+        <Card className="lg:col-span-2 finance-dashboard-card">
           <CardHeader>
-            <CardTitle>Top Income Sources</CardTitle>
-            <CardDescription>Where your money is coming from</CardDescription>
+            <CardTitle>Recent Transactions</CardTitle>
+            <CardDescription>Your latest expenses and payments</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {incomeCategoryData().map((category, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                    ></div>
-                    <span className="text-sm font-medium">{category.name}</span>
-                  </div>
-                  <span>{formatCurrency(category.value)}</span>
-                </div>
-              ))}
+              {[...filteredExpenses, ...filteredPayments]
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .slice(0, 5)
+                .map((item, index) => {
+                  const isExpense = 'isPaid' in item;
+                  return (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            "flex h-9 w-9 items-center justify-center rounded-full",
+                            isExpense 
+                              ? "bg-rose-100 text-rose-600" 
+                              : "bg-emerald-100 text-emerald-600"
+                          )}
+                        >
+                          {isExpense ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{item.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(item.date), "MMM d, yyyy")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={cn(
+                          "text-sm font-medium",
+                          isExpense ? "text-rose-600" : "text-emerald-600"
+                        )}>
+                          {isExpense ? "-" : "+"}{formatCurrency(item.amount)}
+                        </p>
+                        <Badge
+                          variant="outline"
+                          className="text-xs capitalize"
+                        >
+                          {item.category}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card onClick={() => onCardClick('Upcoming Transactions')}>
-          <CardHeader>
-            <CardTitle>Upcoming Transactions</CardTitle>
-            <CardDescription>Over the next 30 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {upcomingExpenses.length === 0 && upcomingPayments.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">No upcoming transactions</p>
-              ) : (
-                <>
-                  {upcomingExpenses.slice(0, 3).map((expense) => (
-                    <div key={expense.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <ArrowDownRight className="h-4 w-4 text-red-500" />
-                        <div>
-                          <div className="text-sm font-medium">{expense.description}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(expense.date), "MMM d")}
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-red-600">{formatCurrency(expense.amount)}</span>
-                    </div>
-                  ))}
-                  
-                  {upcomingPayments.slice(0, 3).map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <ArrowUpRight className="h-4 w-4 text-emerald-500" />
-                        <div>
-                          <div className="text-sm font-medium">{payment.description}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(payment.date), "MMM d")}
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-emerald-600">{formatCurrency(payment.amount)}</span>
-                    </div>
-                  ))}
-                </>
-              )}
+            <div className="mt-4 flex justify-center">
+              <Button variant="ghost" className="gap-1 text-sm">
+                <span>View All Transactions</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>

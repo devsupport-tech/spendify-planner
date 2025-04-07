@@ -9,7 +9,6 @@ export type ExpenseCategory =
   | 'Personal' 
   | 'Entertainment' 
   | 'Education' 
-  | 'Savings' 
   | 'Debt' 
   | 'Other';
 
@@ -21,8 +20,8 @@ export type BusinessCategory =
   | 'Travel' 
   | 'Office' 
   | 'Professional' 
-  | 'Equipment' 
-  | 'Taxes' 
+  | 'Equipment'
+  | 'Taxes'
   | 'Other';
 
 export type PaymentCategory = 
@@ -31,99 +30,40 @@ export type PaymentCategory =
   | 'Investment' 
   | 'Rental' 
   | 'Gift' 
-  | 'Refund' 
-  | 'Sale' 
-  | 'Client' 
   | 'Other';
 
 export interface Expense {
   id: string;
-  amount: number;
   description: string;
-  date: Date;
+  amount: number;
+  date: string;
+  category: string;
   isPaid: boolean;
   isRecurring: boolean;
-  category: ExpenseCategory | BusinessCategory;
   type: 'personal' | 'business';
-  department?: string;
   project?: string;
-  projectId?: string;
+  department?: string;
 }
 
 export interface Payment {
   id: string;
-  amount: number;
   description: string;
-  date: Date;
+  amount: number;
+  date: string;
+  category: PaymentCategory | string;
   isReceived: boolean;
   isRecurring: boolean;
-  category: PaymentCategory;
   type: 'personal' | 'business';
-  client?: string;
-  project?: string;
-  projectId?: string;
+  source?: string;
 }
 
 export interface BudgetGoal {
   id: string;
-  category: ExpenseCategory | BusinessCategory;
+  category: string;
   amount: number;
   current: number;
   period: 'weekly' | 'monthly' | 'yearly';
-}
-
-export type NotificationType = 'info' | 'warning' | 'success' | 'error';
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  date: Date;
-  read: boolean;
-  type: NotificationType;
-  relatedExpenseId?: string;
-}
-
-export interface DashboardSummary {
-  totalIncome: number;
-  totalExpenses: number;
-  balance: number;
-  upcomingExpenses: number;
-  savingsGoalProgress: number;
-  savingsGoalTarget: number;
-}
-
-export interface CategoryBreakdown {
-  category: ExpenseCategory | BusinessCategory;
-  amount: number;
-  percentage: number;
-}
-
-export interface MonthlyTrend {
-  month: string;
-  income: number;
-  expenses: number;
-  savings: number;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  client?: string;
-  description?: string;
-  startDate: Date;
-  endDate?: Date;
-  budget?: number;
-  status: 'active' | 'completed' | 'on-hold' | 'cancelled';
-}
-
-export interface ProjectSummary {
-  id: string;
-  name: string;
-  client?: string;
-  budget?: number;
-  expenses: number;
-  income: number;
-  profit: number;
-  status: 'active' | 'completed' | 'on-hold' | 'cancelled';
+  icon?: string;
+  color?: string;
+  type: 'personal' | 'business';
 }

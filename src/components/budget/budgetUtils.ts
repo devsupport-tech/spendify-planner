@@ -1,91 +1,107 @@
 
 import { BudgetGoal } from "@/lib/types";
 
-// Sample budget goals data
+export type SortOption = "category" | "amount" | "percentage" | "remaining";
+
+// Sample budget goals for demonstration
 export const sampleBudgetGoals: BudgetGoal[] = [
   {
-    id: "bg1",
-    category: "Food",
-    amount: 500,
-    current: 320,
-    period: "monthly"
+    id: "1",
+    category: "Housing",
+    amount: 1200,
+    current: 1200,
+    period: "monthly",
+    type: "personal"
   },
   {
-    id: "bg2",
+    id: "2",
+    category: "Food",
+    amount: 500,
+    current: 350,
+    period: "monthly",
+    type: "personal"
+  },
+  {
+    id: "3",
     category: "Entertainment",
     amount: 200,
     current: 150,
-    period: "monthly"
+    period: "monthly",
+    type: "personal"
   },
   {
-    id: "bg3",
+    id: "4",
     category: "Transportation",
     amount: 300,
-    current: 250,
-    period: "monthly"
+    current: 275,
+    period: "monthly",
+    type: "personal"
   },
   {
-    id: "bg4",
+    id: "5",
     category: "Marketing",
-    amount: 1000,
-    current: 600,
-    period: "monthly"
+    amount: 600,
+    current: 450,
+    period: "monthly",
+    type: "business"
+  },
+  {
+    id: "6",
+    category: "Office Supplies",
+    amount: 150,
+    current: 180,
+    period: "monthly",
+    type: "business"
   }
 ];
 
 // Filter budget goals by period
-export function filterBudgetGoalsByPeriod(
-  goals: BudgetGoal[], 
-  period: 'weekly' | 'monthly' | 'yearly'
-): BudgetGoal[] {
+export const filterBudgetGoalsByPeriod = (goals: BudgetGoal[], period: "weekly" | "monthly" | "yearly"): BudgetGoal[] => {
   return goals.filter(goal => goal.period === period);
-}
+};
 
-export type SortOption = 'category' | 'amount' | 'percentage' | 'remaining';
-
-// Sort budget goals
-export function sortBudgetGoals(
-  goals: BudgetGoal[],
-  sortBy: SortOption,
-  sortOrder: 'asc' | 'desc' = 'asc'
-): BudgetGoal[] {
+// Sort budget goals based on different criteria
+export const sortBudgetGoals = (goals: BudgetGoal[], sortBy: SortOption, sortOrder: "asc" | "desc"): BudgetGoal[] => {
   const sortedGoals = [...goals];
   
-  sortedGoals.sort((a, b) => {
-    let comparison = 0;
-    
-    switch (sortBy) {
-      case 'category':
-        comparison = a.category.localeCompare(b.category);
-        break;
-      case 'amount':
-        comparison = a.amount - b.amount;
-        break;
-      case 'percentage':
+  switch (sortBy) {
+    case "category":
+      sortedGoals.sort((a, b) => a.category.localeCompare(b.category));
+      break;
+    case "amount":
+      sortedGoals.sort((a, b) => a.amount - b.amount);
+      break;
+    case "percentage":
+      sortedGoals.sort((a, b) => {
         const percentageA = (a.current / a.amount) * 100;
         const percentageB = (b.current / b.amount) * 100;
-        comparison = percentageA - percentageB;
-        break;
-      case 'remaining':
+        return percentageA - percentageB;
+      });
+      break;
+    case "remaining":
+      sortedGoals.sort((a, b) => {
         const remainingA = a.amount - a.current;
         const remainingB = b.amount - b.current;
-        comparison = remainingA - remainingB;
-        break;
-    }
-    
-    return sortOrder === 'asc' ? comparison : -comparison;
-  });
+        return remainingA - remainingB;
+      });
+      break;
+    default:
+      break;
+  }
   
-  return sortedGoals;
-}
+  return sortOrder === "asc" ? sortedGoals : sortedGoals.reverse();
+};
 
-// Calculate summary statistics
-export function calculateBudgetSummary(goals: BudgetGoal[]) {
-  return goals.reduce((summary, goal) => {
-    return {
-      totalBudget: summary.totalBudget + goal.amount,
-      totalSpent: summary.totalSpent + goal.current,
-      overBudgetCount: summary.overBudgetCount + (goal.current > goal.amount ? 1 : 0)
-    };
-  }, { totalBudget: 0, totalSpent: 0, overBudgetCount: 0 });
-}
+// Calculate budget summary metrics
+export const calculateBudgetSummary = (goals: BudgetGoal[]) => {
+  const totalBudget = goals.reduce((sum, goal) => sum + goal.amount, 0);
+  const totalSpent = goals.reduce((sum, goal) => sum + goal.current, 0);
+  const overBudgetGoals = goals.filter(goal => goal.current > goal.amount);
+  
+  return {
+    totalBudget,
+    totalSpent,
+    overBudgetCount: overBudgetGoals.length,
+    overBudgetAmount: overBudgetGoals.reduce((sum, goal) => sum + (goal.current - goal.amount), 0)
+  };
+};

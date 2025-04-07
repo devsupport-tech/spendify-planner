@@ -1,203 +1,234 @@
 
-import { useState, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Pencil } from "lucide-react";
-import { BudgetGoal, ExpenseCategory, BusinessCategory } from "@/lib/types";
-import { toast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/lib/formatters";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PlusCircle, User, Briefcase } from "lucide-react";
+import { BudgetGoal } from "@/lib/types";
 
 interface AddBudgetGoalDialogProps {
   onAddGoal: (goal: BudgetGoal) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialGoal?: BudgetGoal | null;
+  initialGoal: BudgetGoal | null;
 }
 
-export function AddBudgetGoalDialog({ onAddGoal, open, onOpenChange, initialGoal = null }: AddBudgetGoalDialogProps) {
-  const [newGoal, setNewGoal] = useState<Partial<BudgetGoal>>({
-    category: "Food",
-    amount: 0,
-    current: 0,
-    period: "monthly"
-  });
-
+export function AddBudgetGoalDialog({ onAddGoal, open, onOpenChange, initialGoal }: AddBudgetGoalDialogProps) {
+  const [category, setCategory] = useState<string>(initialGoal?.category || 'Food');
+  const [amount, setAmount] = useState<string>(initialGoal ? String(initialGoal.amount) : '');
+  const [current, setCurrent] = useState<string>(initialGoal ? String(initialGoal.current) : '');
+  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'yearly'>(initialGoal?.period || 'monthly');
+  const [type, setType] = useState<'personal' | 'business'>(initialGoal?.type || 'personal');
   const isEditing = !!initialGoal;
 
-  // Update form when initialGoal changes
   useEffect(() => {
     if (initialGoal) {
-      setNewGoal(initialGoal);
+      setCategory(initialGoal.category);
+      setAmount(String(initialGoal.amount));
+      setCurrent(String(initialGoal.current));
+      setPeriod(initialGoal.period);
+      setType(initialGoal.type);
     } else {
       // Reset form when not editing
-      setNewGoal({
-        category: "Food",
-        amount: 0,
-        current: 0,
-        period: "monthly"
-      });
+      setCategory('Food');
+      setAmount('');
+      setCurrent('');
+      setPeriod('monthly');
+      setType('personal');
     }
-  }, [initialGoal, open]);
+  }, [initialGoal]);
 
-  const handleInputChange = (field: keyof BudgetGoal, value: any) => {
-    setNewGoal({
-      ...newGoal,
-      [field]: value
-    });
-  };
-
-  const handleSaveGoal = () => {
-    if (newGoal.category && newGoal.amount && newGoal.amount > 0) {
-      const goal: BudgetGoal = {
-        id: isEditing ? (initialGoal?.id || '') : uuidv4(),
-        category: newGoal.category as ExpenseCategory | BusinessCategory,
-        amount: newGoal.amount,
-        current: newGoal.current || 0,
-        period: newGoal.period as 'weekly' | 'monthly' | 'yearly'
-      };
-
-      onAddGoal(goal);
-      
-      if (!isEditing) {
-        setNewGoal({
-          category: "Food",
-          amount: 0,
-          current: 0,
-          period: "monthly"
-        });
-      }
-      
-      onOpenChange(false);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const goal: BudgetGoal = {
+      id: initialGoal?.id || String(Math.random().toString(36).substr(2, 9)),
+      category,
+      amount: parseFloat(amount),
+      current: parseFloat(current || '0'),
+      period,
+      type,
+    };
+    
+    onAddGoal(goal);
+    onOpenChange(false);
+    
+    if (!initialGoal) {
+      // Only reset if adding new goal
+      setCategory('Food');
+      setAmount('');
+      setCurrent('');
     }
   };
 
-  const personalCategories: ExpenseCategory[] = [
-    'Housing', 'Transportation', 'Food', 'Utilities', 'Insurance', 
-    'Healthcare', 'Personal', 'Entertainment', 'Education', 'Savings', 'Debt', 'Other'
+  const personalCategories = [
+    'Housing', 
+    'Transportation', 
+    'Food', 
+    'Utilities', 
+    'Insurance', 
+    'Healthcare', 
+    'Personal', 
+    'Entertainment', 
+    'Education', 
+    'Debt',
+    'Other'
   ];
-  
-  const businessCategories: BusinessCategory[] = [
-    'Marketing', 'Operations', 'Salaries', 'Technology', 'Travel', 
-    'Office', 'Professional', 'Equipment', 'Taxes', 'Other'
+
+  const businessCategories = [
+    'Marketing', 
+    'Operations', 
+    'Salaries', 
+    'Technology', 
+    'Travel', 
+    'Office', 
+    'Professional', 
+    'Equipment',
+    'Taxes',
+    'Other'
   ];
+
+  const trigger = (
+    <Button>
+      <PlusCircle className="mr-2 h-4 w-4" />
+      New Budget Goal
+    </Button>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Budget Goal
-        </Button>
-      </DialogTrigger>
+      {!isEditing && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Budget Goal' : 'Add Budget Goal'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Budget Goal' : 'Add New Budget Goal'}</DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Update your budget goal details.' : 'Create a new budget goal to track your spending.'}
+            {isEditing 
+              ? 'Edit your existing budget goal details.' 
+              : 'Create a new budget goal to track your spending.'}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
-              Category
-            </Label>
-            <Select 
-              value={newGoal.category as string} 
-              onValueChange={(value) => handleInputChange('category', value)}
-            >
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="" disabled>Personal Categories</SelectItem>
-                {personalCategories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-                <SelectItem value="" disabled>Business Categories</SelectItem>
-                {businessCategories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="period" className="text-right">
-              Period
-            </Label>
-            <Select 
-              value={newGoal.period as string} 
-              onValueChange={(value: 'weekly' | 'monthly' | 'yearly') => handleInputChange('period', value)}
-            >
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="amount" className="text-right">
-              Budget Amount
-            </Label>
-            <div className="col-span-3 relative">
-              <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-              <Input
-                id="amount"
-                type="number"
-                min={0}
-                step={1}
-                placeholder="0"
-                className="pl-8"
-                value={newGoal.amount || ''}
-                onChange={(e) => handleInputChange('amount', parseFloat(e.target.value))}
-              />
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Category
+              </Label>
+              <div className="col-span-3">
+                <Select 
+                  value={category} 
+                  onValueChange={setCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(type === 'personal' ? personalCategories : businessCategories).map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="type" className="text-right">
+                Type
+              </Label>
+              <div className="col-span-3">
+                <RadioGroup 
+                  className="flex space-x-4"
+                  value={type}
+                  onValueChange={(value: 'personal' | 'business') => {
+                    setType(value);
+                    // Reset category when changing type
+                    setCategory(value === 'personal' ? 'Food' : 'Marketing');
+                  }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="personal" id="personal" />
+                    <Label htmlFor="personal" className="flex items-center">
+                      <User className="mr-1 h-4 w-4" />
+                      Personal
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="business" id="business" />
+                    <Label htmlFor="business" className="flex items-center">
+                      <Briefcase className="mr-1 h-4 w-4" />
+                      Business
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Budget
+              </Label>
+              <div className="col-span-3 relative">
+                <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                <Input
+                  id="amount"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="0.00"
+                  className="pl-8"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="current" className="text-right">
+                Current Spent
+              </Label>
+              <div className="col-span-3 relative">
+                <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                <Input
+                  id="current"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="0.00"
+                  className="pl-8"
+                  value={current}
+                  onChange={(e) => setCurrent(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="period" className="text-right">
+                Period
+              </Label>
+              <div className="col-span-3">
+                <Select 
+                  value={period} 
+                  onValueChange={(value: 'weekly' | 'monthly' | 'yearly') => setPeriod(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="current" className="text-right">
-              Current Spent
-            </Label>
-            <div className="col-span-3 relative">
-              <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-              <Input
-                id="current"
-                type="number"
-                min={0}
-                step={1}
-                placeholder="0"
-                className="pl-8"
-                value={newGoal.current || ''}
-                onChange={(e) => handleInputChange('current', parseFloat(e.target.value))}
-              />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button 
-            type="submit" 
-            onClick={handleSaveGoal}
-            disabled={!newGoal.category || !newGoal.amount || newGoal.amount <= 0}
-          >
-            {isEditing ? (
-              <>
-                <Pencil className="mr-2 h-4 w-4" />
-                Update Budget Goal
-              </>
-            ) : (
-              <>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Budget Goal
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="submit">
+              {isEditing ? 'Save Changes' : 'Create Goal'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

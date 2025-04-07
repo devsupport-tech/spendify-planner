@@ -1,10 +1,18 @@
 
-import { Trash2, ArrowUpCircle, ArrowDownCircle, Pencil } from "lucide-react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { BudgetGoal } from "@/lib/types";
 import { formatCurrency } from "@/lib/formatters";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 interface BudgetGoalCardProps {
   goal: BudgetGoal;
@@ -14,93 +22,92 @@ interface BudgetGoalCardProps {
 }
 
 export function BudgetGoalCard({ goal, onDelete, onEdit, onClick }: BudgetGoalCardProps) {
-  const percentage = Math.min(Math.round((goal.current / goal.amount) * 100), 100);
+  const percentage = Math.round((goal.current / goal.amount) * 100);
   const isOverBudget = goal.current > goal.amount;
-  
-  // Prevent propagation of button clicks to the card
-  const handleEditClick = (e: React.MouseEvent, goal: BudgetGoal) => {
-    e.stopPropagation();
-    onEdit(goal);
-  };
-
-  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    onDelete(id);
-  };
+  const remaining = goal.amount - goal.current;
   
   return (
     <Card 
-      className="overflow-hidden cursor-pointer transition-all hover:shadow-md"
-      onClick={onClick}
+      className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onClick && onClick()}
     >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
+      <CardContent className="pt-6 pb-2">
+        <div className="flex justify-between items-start mb-4">
           <div>
-            <CardTitle className="text-base">{goal.category}</CardTitle>
-            <CardDescription>{goal.period}</CardDescription>
+            <h3 className="font-medium text-lg">{goal.category}</h3>
+            <p className="text-sm text-muted-foreground capitalize">{goal.period}</p>
           </div>
-          <div className="flex gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 text-muted-foreground hover:text-primary"
-              onClick={(e) => handleEditClick(e, goal)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 text-muted-foreground hover:text-destructive"
-              onClick={(e) => handleDeleteClick(e, goal.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onEdit(goal);
+              }}>
+                <Pencil className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-red-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(goal.id);
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-sm font-medium">
-              {formatCurrency(goal.current)} of {formatCurrency(goal.amount)}
-            </span>
-            <span 
-              className={`text-sm font-medium ${
-                isOverBudget ? 'text-destructive' : 'text-primary'
-              }`}
-            >
+        
+        <div className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span>Progress</span>
+            <span className={isOverBudget ? "text-red-500 font-medium" : ""}>
               {percentage}%
             </span>
           </div>
           
           <Progress 
-            value={percentage} 
-            className={isOverBudget ? 'bg-destructive/20' : 'bg-primary/20'} 
-            indicatorClassName={isOverBudget ? 'bg-destructive' : undefined}
+            value={isOverBudget ? 100 : percentage} 
+            className={isOverBudget ? "bg-red-200" : ""}
+            indicatorClassName={isOverBudget ? "bg-red-500" : undefined}
           />
           
-          <div className="flex justify-between items-center pt-2">
-            <div className="flex items-center gap-1 text-xs">
-              {isOverBudget ? (
-                <>
-                  <ArrowUpCircle className="h-3 w-3 text-destructive" />
-                  <span className="text-destructive">
-                    {formatCurrency(goal.current - goal.amount)} over budget
-                  </span>
-                </>
-              ) : (
-                <>
-                  <ArrowDownCircle className="h-3 w-3 text-primary" />
-                  <span className="text-primary">
-                    {formatCurrency(goal.amount - goal.current)} remaining
-                  </span>
-                </>
-              )}
+          <div className="flex justify-between items-end">
+            <div>
+              <p className="text-sm text-muted-foreground">Spent</p>
+              <p className={`text-xl font-semibold ${isOverBudget ? "text-red-500" : ""}`}>
+                {formatCurrency(goal.current)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Budget</p>
+              <p className="text-xl font-semibold">{formatCurrency(goal.amount)}</p>
             </div>
           </div>
         </div>
       </CardContent>
+      
+      <CardFooter className="bg-muted/50 py-3">
+        <div className="w-full flex justify-between items-center">
+          <div className="flex items-center">
+            <span className="text-sm font-medium">
+              {isOverBudget ? "Over budget:" : "Remaining:"}
+            </span>
+          </div>
+          <span className={`font-medium ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
+            {formatCurrency(Math.abs(remaining))}
+          </span>
+        </div>
+      </CardFooter>
     </Card>
   );
 }
