@@ -55,6 +55,8 @@ export interface Payment {
   isRecurring: boolean;
   type: 'personal' | 'business';
   source?: string;
+  client?: string;
+  project?: string;
 }
 
 export interface BudgetGoal {
@@ -66,4 +68,26 @@ export interface BudgetGoal {
   icon?: string;
   color?: string;
   type: 'personal' | 'business';
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  client?: string;
+  description?: string;
+  startDate: Date;
+  endDate?: Date;
+  budget?: number;
+  status: 'active' | 'completed' | 'on-hold' | 'cancelled';
+}
+
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  client?: string;
+  budget?: number;
+  expenses: number;
+  income: number;
+  profit: number;
+  status: 'active' | 'completed' | 'on-hold' | 'cancelled';
 }

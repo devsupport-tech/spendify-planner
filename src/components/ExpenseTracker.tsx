@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +32,7 @@ export function ExpenseTracker() {
   const [newExpense, setNewExpense] = useState<Partial<Expense>>({
     amount: 0,
     description: "",
-    date: new Date(),
+    date: format(new Date(), 'yyyy-MM-dd'), // Convert Date to string format
     isPaid: false,
     isRecurring: false,
     category: "Other",
@@ -78,6 +79,11 @@ export function ExpenseTracker() {
     .reduce((sum, expense) => sum + expense.amount, 0);
 
   const handleExpenseChange = (field: string, value: any) => {
+    // Handle date specially to convert Date objects to string format
+    if (field === 'date' && value instanceof Date) {
+      value = format(value, 'yyyy-MM-dd');
+    }
+    
     setNewExpense({
       ...newExpense,
       [field]: value,

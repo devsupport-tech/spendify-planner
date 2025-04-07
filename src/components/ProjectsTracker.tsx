@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,14 +66,14 @@ const projects: Project[] = [
 const getProjectExpenses = (projectId: string): Expense[] => {
   return expenses.filter(expense => 
     expense.type === 'business' && 
-    (expense.projectId === projectId || expense.project === projects.find(p => p.id === projectId)?.name)
+    (expense.project === projects.find(p => p.id === projectId)?.name)
   );
 };
 
 const getProjectPayments = (projectId: string): Payment[] => {
   return payments.filter(payment => 
     payment.type === 'business' && 
-    (payment.projectId === projectId || payment.project === projects.find(p => p.id === projectId)?.name)
+    (payment.project === projects.find(p => p.id === projectId)?.name)
   );
 };
 

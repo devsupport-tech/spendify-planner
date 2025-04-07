@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +30,13 @@ export function PaymentTracker() {
   const [newPayment, setNewPayment] = useState<Partial<Payment>>({
     amount: 0,
     description: "",
-    date: new Date(),
+    date: format(new Date(), 'yyyy-MM-dd'),
     isReceived: false,
     isRecurring: false,
     category: "Other",
     type: "personal",
+    client: "",
+    project: "",
   });
 
   const filteredPayments = payments.filter((payment) => {
@@ -78,6 +79,10 @@ export function PaymentTracker() {
     .reduce((sum, payment) => sum + payment.amount, 0);
 
   const handlePaymentChange = (field: string, value: any) => {
+    if (field === 'date' && value instanceof Date) {
+      value = format(value, 'yyyy-MM-dd');
+    }
+    
     setNewPayment({
       ...newPayment,
       [field]: value,
@@ -99,6 +104,8 @@ export function PaymentTracker() {
       isRecurring: false,
       category: "Other",
       type: "personal",
+      client: "",
+      project: "",
     });
   };
 

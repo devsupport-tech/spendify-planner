@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,9 +25,11 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
-const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
+interface FinanceDashboardProps {
+  onCardClick?: (tabName: string) => void;
+}
 
-export function FinanceDashboard({ onCardClick }) {
+export function FinanceDashboard({ onCardClick }: FinanceDashboardProps = {}) {
   const [timeRange, setTimeRange] = useState<'1m' | '3m' | '6m' | '1y'>('1m');
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
