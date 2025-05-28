@@ -1,6 +1,8 @@
 
+
 import React from 'react';
 import { ClickableDashboard } from '@/components/ClickableDashboard';
+import { Chatbot } from '@/components/Chatbot';
 
 const Dashboard = () => {
   const handleCardClick = (tabName: string) => {
@@ -11,8 +13,10 @@ const Dashboard = () => {
   return (
     <div className="container mx-auto py-6">
       <ClickableDashboard onCardClick={handleCardClick} />
+      <Chatbot />
     </div>
   );
 };
 
 export default Dashboard;
+
